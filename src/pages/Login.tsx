@@ -1,5 +1,5 @@
-import { useState, FormEvent } from "react";
-import { Link } from "react-router-dom";
+import {useState, FormEvent} from "react";
+import {Link} from "react-router-dom";
 
 export default function Login() {
     const [email, setEmail] = useState<string>("");
@@ -7,7 +7,7 @@ export default function Login() {
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        console.log("Login:", { email, password });
+        console.log("Login:", {email, password});
     };
 
     return (
