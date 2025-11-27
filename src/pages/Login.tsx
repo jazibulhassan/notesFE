@@ -1,13 +1,53 @@
 import {useState, FormEvent} from "react";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 
 export default function Login() {
-    const [email, setEmail] = useState<string>("");
+    const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string>("");
 
-    const handleSubmit = (e: FormEvent) => {
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        console.log("Login:", {email, password});
+        setLoading(true);
+        setError("");
+
+        try {
+            const response = await fetch("http://localhost:8080/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({username, password}),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                setError(data.error || "Login failed");
+                setLoading(false);
+                return;
+            }
+
+            const data = await response.json();
+            console.log("Login successful:", data);
+
+            // Save token (if your API returns one)
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+            }
+
+            setLoading(false);
+
+            // Redirect to a protected page (dashboard)
+            navigate("/dashboard");
+
+        } catch (err) {
+            console.error("Login error:", err);
+            setError("Something went wrong. Try again.");
+            setLoading(false);
+        }
     };
 
     return (
@@ -18,13 +58,16 @@ export default function Login() {
             >
                 <h2 className="text-2xl font-semibold text-center">Login</h2>
 
+                {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+
                 <div className="flex flex-col gap-2">
                     <input
-                        type="email"
-                        placeholder="Email"
+                        type="text"
+                        placeholder="Username"
                         className="w-full p-2 border rounded"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
                     />
                 </div>
 
@@ -38,7 +81,11 @@ export default function Login() {
                     />
                 </div>
 
-                <button className="w-full bg-blue-600 text-white p-2 rounded hover:opacity-90 transition">
+                <p></p>
+                <button className="w-full bg-blue-600 text-white p-2 rounded hover:opacity-90 transition"
+                        disabled={loading}
+                        type="submit"
+                >
                     Login
                 </button>
 

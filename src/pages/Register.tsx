@@ -1,4 +1,4 @@
-import {useState, FormEvent, ChangeEvent} from "react";
+import {useState, type FormEvent, type ChangeEvent} from "react";
 import {Link} from "react-router-dom";
 
 interface RegisterForm {
@@ -14,13 +14,47 @@ export default function Register() {
         password: "",
     });
 
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string>("");
+
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         setForm({...form, [e.target.name]: e.target.value});
     };
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
+
         e.preventDefault();
         console.log("Register:", form);
+
+        try {
+            const response = await fetch("http://localhost:8080/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(form),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                setError(data.message || "Registration failed");
+                setLoading(false);
+                return;
+            }
+
+            const data = await response.json();
+            console.log("Registration successful:", data);
+            alert("Registered successfully! You can now login.");
+            setLoading(false);
+
+            // Optional: reset form
+            setForm({username: "", email: "", password: ""});
+        } catch (err) {
+            console.error("Registration error:", err);
+            setError("Something went wrong. Try again.");
+            setLoading(false);
+        }
+
     };
 
     return (
@@ -30,6 +64,8 @@ export default function Register() {
                 className="w-80 bg-white p-6 border rounded-lg shadow-sm flex flex-col gap-4"
             >
                 <h2 className="text-xl mb-3 text-center">Register</h2>
+
+                {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
                 <div className="flex flex-col gap-2">
                     <input
@@ -62,8 +98,11 @@ export default function Register() {
                         onChange={handleChange}
                     />
                 </div>
+                <p></p>
 
-                <button className="w-full bg-green-600 text-white p-2 rounded">
+                <button className="w-full bg-green-600 text-white p-2 rounded"
+                        type="submit"
+                        disabled={loading}>
                     Register
                 </button>
 
